@@ -4,7 +4,7 @@ from email.header import decode_header
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 root = tkinter.Tk()
 root.withdraw()
-fTyp =[("","*")]
+fTyp =[("mbox","*.mbox"),("","*")]
 iDir = os.path.abspath(os.path.dirname(__file__))
 file = tkinter.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
 mail_box = mailbox.mbox(file)
