@@ -7,9 +7,18 @@ root.withdraw()
 fTyp =[("mbox","*.mbox"),("","*")]
 iDir = os.path.abspath(os.path.dirname(__file__))
 file = tkinter.filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+if len(file) ==0:
+	print("ファイルを選んでください")
+	exit()
 mail_box = mailbox.mbox(file)
 
+os.chdir(os.path.dirname(iDir))
+
 w_file = open("export.txt",'w',encoding='utf-8')
+epath = os.path.splitext(os.path.basename(file))[0]+"export"
+os.mkdir(epath,True)
+os.mkdir(epath+"_temp",True)
+
 count = 0
 for key in mail_box.keys():
 	a_msg = mail_box.get(key)
@@ -32,8 +41,8 @@ for key in mail_box.keys():
 			usbj += ","
 	w_file.write("subject: "+usbj+"\n")
 	rfilename=re.sub(r'[\\|\/|:|\*|?|\<|\>|\||"|$|,|;||(\r)|(\n)]+', '', usbj)
-	print(rfilename)
-	w_file0 = open(str(count)+"_"+ rfilename + ".txt",'w',encoding='utf-8')
+	#print(rfilename)
+	w_file0 = open(epath+"/"+str(count)+"_"+ rfilename + ".txt",'w',encoding='utf-8')
 	w_file0.write("subject: "+usbj+"\n")
 	from_str = a_msg.get_from()
 	w_file.write(from_str+"\n")
@@ -43,25 +52,26 @@ for key in mail_box.keys():
 	for aa_msg in a_msg.walk():
 		if  'multipart' in aa_msg.get_content_type():
 			continue #"text"パートでなかったら次のパートへ
-			attach_fname = aa_msg.get_filename()
-			if not attach_fname:
-				if aa_msg.get_content_charset() :
-					a_text = aa_msg.get_payload(decode=True).decode(aa_msg.get_content_charset(), "ignore")
-				else:
-					if "charset=shift_jis" in str(aa_msg.get_payload(decode=True)):
-						a_text = aa_msg.get_payload(decode=True).decode("cp932", "ignore")
-					elif enc == None:#ascii
-						a_text = aa_msg.get_payload(decode=True).decode("ascii", "ignore")
-					else:
-						#print ("** Cannot decode.Cannot specify charset ***"+aa_msg.get("From"))
-						a_text = aa_msg.get_payload(decode=True).decode(enc, "ignore")
-				w_file.write(a_text+"\n")
-				w_file0.write(a_text+"\n")
+		attach_fname = aa_msg.get_filename()
+		if not attach_fname:
+			if aa_msg.get_content_charset() :
+				a_text = aa_msg.get_payload(decode=True).decode(aa_msg.get_content_charset(), "ignore")
 			else:
-				with open('./' + attach_fname, 'wb') as f:
-					f.write(aa_msg.get_payload(decode=True))
-					print(f"{filename}を保存しました。")
+				if "charset=shift_jis" in str(aa_msg.get_payload(decode=True)):
+					a_text = aa_msg.get_payload(decode=True).decode("cp932", "ignore")
+				elif enc == None:#ascii
+					a_text = aa_msg.get_payload(decode=True).decode("ascii", "ignore")
+				else:
+					#print ("** Cannot decode.Cannot specify charset ***"+aa_msg.get("From"))
+					a_text = aa_msg.get_payload(decode=True).decode(enc, "ignore")
+			w_file.write(a_text+"\n")
+			w_file0.write(a_text+"\n")
+		else:
+			with open('./'+epath+"_temp"+"/"+str(count)+"_"+ attach_fname, 'wb') as f:
+				f.write(aa_msg.get_payload(decode=True))
+				print(f"{filename}を保存しました。")
 		continue
 	count += 1
+	
 	w_file0.close()
 w_file.close()
