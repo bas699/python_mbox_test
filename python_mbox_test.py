@@ -45,8 +45,8 @@ for key in mail_box.keys():
 				else:
 					usbj += bstr
 			usbj += ","
-	w_file.write(str(count)+"\n")
-	w_file.write("subject: "+usbj+"\n")
+	w_file.write(str(count)+"\t")
+	w_file.write("subject: "+usbj+"\t")
 	rfilename=re.sub(r'[\\|\/|:|\*|?|\<|\>|\||"|$|,|;||(\r)|(\n)]+', '', usbj)
 	logging.debug(rfilename)
 	from_str = a_msg.get_from()
@@ -54,16 +54,16 @@ for key in mail_box.keys():
 	w_file0 = open(epath+"/"+from_str.split('@')[0]+"_"+ rfilename + ".txt",'w',encoding='utf-8')
 	w_file0.write("subject: "+usbj+"\n")
 
-	w_file.write(from_str+"\n")
+	w_file.write(from_str+"\t")
 	w_file0.write(from_str+"\n")
 	try:
-		to_str ="From:"+ a_msg.get('from')+"\n"
-		to_str += "To:"+a_msg.get('to')+"\n"
-		to_str += "Date:"+a_msg.get('date')+"\n"
+		to_str ="From:"+ a_msg.get('from')+"\t"
+		to_str += "To:"+a_msg.get('to')+"\t"
+		to_str += "Date:"+a_msg.get('date')+"\t"
 	except TypeError:
 		pass
 	logging.debug(to_str)
-	w_file.write(to_str+"\n")
+	w_file.write(to_str+"\t")
 	w_file0.write(to_str+"\n")
 
 	for aa_msg in a_msg.walk():
@@ -79,9 +79,9 @@ for key in mail_box.keys():
 				elif enc == None:#ascii
 					a_text = aa_msg.get_payload(decode=True).decode("ascii", "ignore")
 				else:
-					#logging.error ("** Cannot decode.Cannot specify charset ***"+aa_msg.get("From"))
+					#logging.debug ("** Cannot decode.Cannot specify charset ***"+aa_msg.get("From"))
 					a_text = aa_msg.get_payload(decode=True).decode(enc, "ignore")
-			w_file.write(a_text[0:400]+"\n")
+			w_file.write(" ".join(a_text[0:400].splitlines())+"\t")#','.join(s.splitlines())
 			w_file0.write(a_text+"\n")
 		else:
 			attach_e_fname=re.sub(r'[\\|\/|:|\*|?|\<|\>|\||"|$|,|;||(\r)|(\n)|(\t)]+', '', attach_fname)
@@ -91,8 +91,10 @@ for key in mail_box.keys():
 				except TypeError:
 					pass
 				logging.info(attach_fname+"を保存しました。")
+				w_file.write("file:"+attach_fname+"\t")
+				w_file0.write(attach_fname+"\n")
 		continue
 	count += 1
-	
+	w_file.write("\n")
 	w_file0.close()
 w_file.close()
